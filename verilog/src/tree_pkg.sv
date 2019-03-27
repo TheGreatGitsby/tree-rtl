@@ -1,3 +1,5 @@
+import user_tree_pkg::*;
+
 package tree_pkg;
  
    typedef struct tree_node 
@@ -48,7 +50,6 @@ package tree_pkg;
      return tree;
    endfunction;
 
-   const tree_object_t tree = tree_generateTree(dependencies);
 
 function integer tree_GetNodeUniqueId (input tree_t tree_i; input integer level, node_idx);
       return tree_i(level)(node_idx).node_id;
@@ -86,7 +87,7 @@ function logic tree_NodeExists(input integer node_id);
   return 0;
 endfunction;
 
-function node_data tree_GetNodeData(input identifier rcvd_id;
+function node_data tree_GetROMNodeData(input identifier rcvd_id;
                                     input node_list possible_nodes);
  // if ROM we can loop though node_arr
  for (int i=0; i<MAX_NODES_PER_LEVEL; i++)
@@ -94,8 +95,6 @@ function node_data tree_GetNodeData(input identifier rcvd_id;
    if (node_hit(rcvd_id, node_arr[possible_nodes[i]]) 
      return node_arr[i];
  end;
-
-//if RAM TODO
 
 // handle error here....
 return node_arr[0];  //null node
