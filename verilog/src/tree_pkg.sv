@@ -2,36 +2,36 @@ import user_tree_pkg::*;
 
 package tree_pkg;
  
-   typedef struct tree_node 
+   typedef struct  
    {
      integer node_id;
      integer parent_node_id;
-   }
+   } tree_node;
    
-   typedef integer [MAX_NODES_PER_LEVEL-1:0] node_list;
+   typedef int node_list [user_tree_pkg::MAX_NODES_PER_LEVEL];
 
-   typedef tree_node [MAX_NODES_PER_LEVEL-1:0] row_t;
-   typedef row_t   [NUM_MSG_HIERARCHY-1:0] tree_t;
-   typedef integer  [NUM_MSG_HIERARCHY-1:0] path_t;
+   typedef tree_node row_t [user_tree_pkg::MAX_NODES_PER_LEVEL];
+   typedef row_t tree_t [user_tree_pkg::NUM_MSG_HIERARCHY];
+   typedef integer path_t [user_tree_pkg::NUM_MSG_HIERARCHY];
 
-   typedef struct tree_meta_t
+   typedef struct
    {
       integer cur_node_id;
       integer level;
       path_t  cur_path;
-   }
+   }tree_meta_t;
 
 
-   function tree_t tree_generateTree(input dependency_arr_t dependencies);
+   function tree_t tree_generateTree(input user_tree_pkg::dependency_arr_t dependencies);
                           
-     tree_t tree = '0;
-     integer cur_parent_node_id = 0;
+     automatic tree_t tree = '0;
+     automatic integer cur_parent_node_id = 0;
                             
-     for (int i=0; i<NUM_MSGS; i++) begin   // loop all the dependency arrays
-       for (int level=0; level<NUM_MSG_HIERARCHY; level++) begin // loop through each dependency array idx
+     for (int i=0; i<user_tree_pkg::NUM_MSGS; i++) begin   // loop all the dependency arrays
+       for (int level=0; level<user_tree_pkg::NUM_MSG_HIERARCHY; level++) begin // loop through each dependency array idx
            if (dependencies(i)(level) == 0) //null_node_id
               break;
-           for (int k=0; k< MAX_NODES_PER_LEVEL; k++) begin //loop through slots in tree level j 
+           for (int k=0; k< user_tree_pkg::MAX_NODES_PER_LEVEL; k++) begin //loop through slots in tree level j 
             if (tree(level)(k).node_id == dependencies(i)(level)) 
             begin
                // node exists in the tree
@@ -122,4 +122,4 @@ function tree_meta_t tree_RewindNodePtr(input tree_meta_t tree_meta);
 
 endfunction;
 
-endpackage;
+endpackage

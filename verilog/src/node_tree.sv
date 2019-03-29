@@ -1,26 +1,26 @@
-`include pipeFlow_pkg.svh 
+`include "pipeFlow_pkg.svh" 
+import user_tree_pkg::*;
 import tree_pkg::*;
 
 module nodeTree
 (
-     input  identifier  field_id_i
-     output logic       field_id_input_rdy;
-     input  logic       field_id_valid;
+     input  identifier  field_id_i,
+     output logic       field_id_rdy,
+     input  logic       field_id_valid,
 
-     output logic       node_valid;
-     input  logic       node_rdy;
-     output node_data   node;
+     output logic       node_valid,
+     input  logic       node_rdy,
+     output node_data   node,
 
-     input  logic       clk_i;
+     input  logic       clk_i,
      input  logic       reset_i
 );
 
    const tree_object_t tree = tree_generateTree(dependencies);
 
    node_list possible_nodes;
-   node_data node;
 
-   `ifdef(ROM)
+   `ifdef ROM
      // delay is 2 assuming ROM lookup
      const int NODE_SEARCH_DELAY = 2;
    `else
@@ -29,7 +29,7 @@ module nodeTree
      const int NODE_SEARCH_DELAY = 2;
    `endif
 
-   always_ff @(pos_edge clk_i)
+   always_ff @(posedge clk_i)
    begin
 
      // this does the delay pipeline for a node lookup.
@@ -41,19 +41,21 @@ module nodeTree
      // since the node pointer may have advanced. NO, this
      // is not a very good pipeline but that's okay.
      `pipeFlowAttrb(DISABLE_PIPELINING)
-     `pipeFlow(field_id, NODE_SEARCH_DELAY)
+     // number of pipeline delays is 2 for ROM
+     parameter NODE_SEARCH_DELAY = 2;
+     `pipeFlow(field_id, node, NODE_SEARCH_DELAY)
 
      possible_nodes <= tree_GetChildNodes(tree, tree_meta); 
      
-     `ifdef(ROM)
+     `ifdef ROM
        node           <= tree_GetROMNodeData(field_id_i, possible_nodes);
      `else
        //TODO: Add RAM reads
        node           <= tree_GetROMNodeData(field_id_i, possible_nodes);
      `endif
 
-     if ((field_id_out_valid == 1) && 
-         (node != null_node)       && 
+     if ((field_id_valid == 1) && 
+         (node != null_node_data)       && 
          (node_rdy == 1)) begin
        //advance the node pointer
        tree_meta      <= tree_AdvanceNodePtr(tree_meta, unique_id);
@@ -61,5 +63,5 @@ module nodeTree
 
    end
 
-endmodule;
+endmodule
 
