@@ -17,6 +17,15 @@ module nodeTree
 );
 
    const tree_object_t tree = tree_generateTree(dependencies);
+   tree_meta_t tree_meta;
+   `ifdef ROM
+     node_ROM_t ROM = generateROM(dependencies);
+   `else
+     //TODO: add RAM
+     node_ROM_t ROM = generateROM(dependencies);
+   `endif
+   
+   integer node_addr;
 
    node_list possible_nodes;
 
@@ -48,17 +57,20 @@ module nodeTree
      possible_nodes <= tree_GetChildNodes(tree, tree_meta); 
      
      `ifdef ROM
-       node           <= tree_GetROMNodeData(field_id_i, possible_nodes);
+       node_addr = tree_GetROMNodeAddr(field_id_i, possible_nodes, ROM);
+       node    <= ROM[node_addr];
      `else
        //TODO: Add RAM reads
-       node           <= tree_GetROMNodeData(field_id_i, possible_nodes);
+        node_addr = tree_GetROMNodeAddr(field_id_i, possible_nodes, ROM);
+         node    <= ROM[node_addr];
      `endif
 
      if ((field_id_valid == 1) && 
          (node != null_node_data)       && 
          (node_rdy == 1)) begin
        //advance the node pointer
-       tree_meta      <= tree_AdvanceNodePtr(tree_meta, unique_id);
+       tree_meta      <= tree_AdvanceNodePtr(tree_meta, 
+                           node_addr);
      end
 
    end

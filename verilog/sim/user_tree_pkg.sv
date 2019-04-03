@@ -6,7 +6,7 @@ package user_tree_pkg;
    
    typedef enum {NULL_MESSAGE, PERSON, PHONE_NUMBER} msg_t; 
 
-   // This is the identifier that logic will
+   // This is the address that logic will
    // receive and uses to map to node_data.
    typedef logic [4:0] identifier;
 
@@ -24,24 +24,25 @@ package user_tree_pkg;
 
    const node_data null_node_data = '{field_id: 0,
                                      msg_name: NULL_MESSAGE};
+                                     
+   typedef struct
+   {
+     integer node_addr;
+     node_data node;                               
+   } tree_node_t;
 
-   const integer null_node_id = 0;
-   const integer person_node_id = 1;
-   const integer phone_number_node_id = 2;
+   tree_node_t null_node = {node_addr:0, node_data:null_node_data};
+   tree_node_t person_node = {node_addr:1, node_data:Person_msg};
+   tree_node_t phonenumber_node = {node_addr:2, node_data:PhoneNumber_msg};
 
-   typedef int dependency_t [NUM_MSG_HIERARCHY];
+   typedef tree_node_t dependency_t [NUM_MSG_HIERARCHY];
 
-   const dependency_t person_dependency = '{person_node_id, null_node_id};
-   const dependency_t PhoneNumber_dependency = '{person_node_id, phone_number_node_id};
+   const dependency_t person_dependency = '{person_node, null_node};
+   const dependency_t PhoneNumber_dependency = '{person_node, phonenumber_node};
 
    typedef dependency_t dependency_arr_t [NUM_MSGS];
    const dependency_arr_t dependencies = '{person_dependency,
-                                     PhoneNumber_dependency};
-
-   // If using ROM based node data                                   
-   const node_data node_arr [NUM_MSGS] = '{null_node_data,
-                                           Person_msg,    
-                                           PhoneNumber_msg};    
+                                     PhoneNumber_dependency};  
 
 //  Callback function to find a node hit
 //  Returns 1 for hit, 0 for miss
