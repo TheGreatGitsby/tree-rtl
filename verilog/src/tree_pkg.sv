@@ -21,26 +21,26 @@ package tree_pkg;
       path_t  cur_path;
    }tree_meta_t;
 
-   function tree_t tree_generateTree(input user_tree_pkg::dependency_arr_t dependencies);
+   function tree_t tree_generateTree(input user_tree_pkg::dependency_arr_t dep);
                           
      automatic tree_t tree = '{default:0};
      automatic integer cur_parent_node_id = 0;
                             
      for (int i=0; i<user_tree_pkg::NUM_MSGS; i++) begin   // loop all the dependency arrays
        for (int level=0; level<user_tree_pkg::NUM_MSG_HIERARCHY; level++) begin // loop through each dependency array idx
-           if (dependencies[i][level].node_addr == 0) //null_node_id
-              break;
+         //  if (dep[i][level].node_addr == 0) //null_node_id
+         //     break;
            for (int k=0; k< user_tree_pkg::MAX_NODES_PER_LEVEL; k++) begin //loop through slots in tree level j 
-            if (tree[level][k].node_addr == dependencies[i][level].node_addr) 
+            if (tree[level][k].node_addr == dep[i][level].node_addr) 
             begin
                // node exists in the tree
                cur_parent_node_id = tree[level][k].node_addr; 
                break;
             end
-            if (tree[level][k].node_id == 0) 
+            if (tree[level][k].node_addr == 0) 
             begin
-               tree[level][k].parent_node_id = cur_parent_node_id;
-               tree[level][k].node_addr = dependencies[i][level].addr;
+               tree[level][k].parent_node_addr = cur_parent_node_id;
+               tree[level][k].node_addr = dep[i][level].node_addr;
                break;
             end;
            end;
@@ -49,8 +49,9 @@ package tree_pkg;
      return tree;
    endfunction;
 
-   // If using ROM based node data                                    
-   typedef node_data node_ROM_t [user_tree_pkg::NUM_MSGS];
+   // If using ROM based node data          
+   // +1 for the null_node at addr 0                          
+   typedef user_tree_pkg::node_data node_ROM_t [user_tree_pkg::NUM_MSGS + 1];
                                      
    function node_ROM_t generateROM (input user_tree_pkg::dependency_arr_t dep_arr);
      node_ROM_t ROM;
@@ -63,17 +64,17 @@ package tree_pkg;
    endfunction;  
 
 function integer tree_GetNodeUniqueId (input tree_t tree_i, input integer level, node_idx);
-      return tree_i[level][node_idx].node_id;
+      return tree_i[level][node_idx].node_addr;
 endfunction;
 
 function integer tree_GetNodeParentId(input tree_t tree,
                       input integer level, node_idx);
-      return tree[level][node_idx].parent_node_id;
+      return tree[level][node_idx].parent_node_addr;
 endfunction;
 
 function node_list tree_GetChildNodes(input tree_t tree, input tree_meta_t tree_meta);
 
-  automatic integer level = tree_meta.level;
+  automatic integer level = tree_meta.level + 1;
   node_list return_list;
 
   if (tree_meta.level == user_tree_pkg::NUM_MSG_HIERARCHY)
@@ -118,6 +119,7 @@ endfunction;
 
    tree_meta_new.cur_node_id                   = unique_id;
    tree_meta_new.level                         = tree_meta.level + 1;
+   tree_meta_new.cur_path                      = tree_meta.cur_path;
    tree_meta_new.cur_path[tree_meta.level + 1] = unique_id;
 
    return tree_meta_new;

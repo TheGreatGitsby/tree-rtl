@@ -2,7 +2,10 @@
 import user_tree_pkg::*;
 import tree_pkg::*;
 
-module nodeTree
+// This will go somewhere else eventually to leave this generic
+`define ROM
+
+module node_tree
 (
      input  identifier  field_id_i,
      output logic       field_id_rdy,
@@ -16,28 +19,29 @@ module nodeTree
      input  logic       reset_i
 );
 
-   const tree_object_t tree = tree_generateTree(dependencies);
-   tree_meta_t tree_meta;
+   const tree_t tree = tree_generateTree(user_tree_pkg::dependencies);
+   tree_meta_t tree_meta = '{0, 0, '{default:'0}};
+   
    `ifdef ROM
-     node_ROM_t ROM = generateROM(dependencies);
+     const node_ROM_t ROM = generateROM(user_tree_pkg::dependencies);
    `else
      //TODO: add RAM
-     node_ROM_t ROM = generateROM(dependencies);
+     const node_ROM_t ROM = generateROM(user_tree_pkg::dependencies);
    `endif
    
    integer node_addr;
 
-   node_list possible_nodes;
+   tree_pkg::node_list possible_nodes;
 
    `ifdef ROM
-     // delay is 2 assuming ROM lookup
-     const int NODE_SEARCH_DELAY = 2;
+     // delay is 3 assuming ROM lookup
+     parameter NODE_SEARCH_DELAY = 3;
    `else
      //TODO: Add RAM delay parameter
      //      its going to be a function of NODES_PER_LEVEL
-     const int NODE_SEARCH_DELAY = 2;
+     parameter NODE_SEARCH_DELAY = 2;
    `endif
-
+   
    always_ff @(posedge clk_i)
    begin
 
@@ -49,23 +53,26 @@ module nodeTree
      // search until the last one has completely finished
      // since the node pointer may have advanced. NO, this
      // is not a very good pipeline but that's okay.
-     `pipeFlowAttrb(DISABLE_PIPELINING)
-     // number of pipeline delays is 2 for ROM
-     parameter NODE_SEARCH_DELAY = 2;
-     `pipeFlow(field_id, node, NODE_SEARCH_DELAY)
-
-     possible_nodes <= tree_GetChildNodes(tree, tree_meta); 
+      
+     `delayFlow(field_id, node, NODE_SEARCH_DELAY)
+      
      
      `ifdef ROM
-       node_addr = tree_GetROMNodeAddr(field_id_i, possible_nodes, ROM);
-       node    <= ROM[node_addr];
+       if(stage_valid[0])
+          possible_nodes <= tree_GetChildNodes(tree, tree_meta);
+       if(stage_valid[1])
+          node_addr <= tree_GetROMNodeAddr(field_id_i, possible_nodes, ROM);
+       if(stage_valid[2])
+         node <= ROM[node_addr];
      `else
        //TODO: Add RAM reads
-        node_addr = tree_GetROMNodeAddr(field_id_i, possible_nodes, ROM);
+       if(stage_valid[0])
+         node_addr <= tree_GetROMNodeAddr(field_id_i, possible_nodes, ROM);
+       if(stage_valid[1])
          node    <= ROM[node_addr];
      `endif
 
-     if ((field_id_valid == 1) && 
+     if ((node_valid == 1) && 
          (node != null_node_data)       && 
          (node_rdy == 1)) begin
        //advance the node pointer
