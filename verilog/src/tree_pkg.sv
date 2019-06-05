@@ -1,47 +1,57 @@
 import user_tree_pkg::*;
 
 package tree_pkg;
- 
-   typedef struct  
-   {
-     integer node_addr;
-     integer parent_node_addr;
-   } tree_node;
+
+   typedef logic [7:0] child_node_addr_list_t [user_tree_pkg::MAX_NODES_PER_LEVEL];
+   parameter NODE_SIZE = IDENTIFIER_SIZE+NODE_ADDR_SIZE+(NODE_ADDR_SIZE*user_tree_pkg::MAX_NODES_PER_LEVEL);
+   typedef logic [NODE_SIZE-1:0] tree_node;
+
+   //typedef struct packed  
+   //{
+   //  logic [IDENTIFIER_SIZE-1] node_id;
+   //  logic [7:0]        parent_node_addr;
+   //  logic [7:0]  child_node_addr_list [user_tree_pkg::MAX_NODES_PER_LEVEL];
+   //} tree_node;
+
+   `define SLICE_NODE_ID(tree_node) \
+     return tree_node[x:y]
+
+   `define SLICE_CHILD_NODE_ADDR(tree_node, idx) \
+     return tree_node[(CHILD_ADDR_LIST_OFFSET)*(k*(NODE_SIZE)):(k*NODE_SIZE+CHILD_ADDR_LIST_OFFSET]
+
+   `define ADD_CHILD_NODE_ADDR(tree_node, idx, new_child_node_Addr) \
+     tree_node[(CHILD_ADDR_LIST_OFFSET)*(idx*(NODE_SIZE)):(idx*NODE_SIZE+CHILD_ADDR_LIST_OFFSET] = new_child_node_addr
+
+   `define FILL_NEW_NODE(new_node_id, parent_node_addr) \
+     return {new_node_id, parent_node_addr, 8'h00}
+
+   typedef logic [NODE_SIZE-1] tree_t [NUM_MSGS-1]
    
-   typedef int node_list [user_tree_pkg::MAX_NODES_PER_LEVEL];
-
-   typedef tree_node row_t [user_tree_pkg::MAX_NODES_PER_LEVEL];
-   typedef row_t tree_t [user_tree_pkg::NUM_MSG_HIERARCHY];
-   typedef integer path_t [user_tree_pkg::NUM_MSG_HIERARCHY];
-
-   typedef struct
-   {
-      integer cur_node_id;
-      integer level;
-      path_t  cur_path;
-   }tree_meta_t;
-
    function tree_t tree_generateTree(input user_tree_pkg::dependency_arr_t dep);
                           
      automatic tree_t tree = '{default:0};
-     automatic integer cur_parent_node_id = 0;
+     automatic logic[7:0] cur_node_addr = 0;
                             
      for (int i=0; i<user_tree_pkg::NUM_MSGS; i++) begin   // loop all the dependency arrays
        for (int level=0; level<user_tree_pkg::NUM_MSG_HIERARCHY; level++) begin // loop through each dependency array idx
-         //  if (dep[i][level].node_addr == 0) //null_node_id
-         //     break;
-           for (int k=0; k< user_tree_pkg::MAX_NODES_PER_LEVEL; k++) begin //loop through slots in tree level j 
-            if (tree[level][k].node_addr == dep[i][level].node_addr) 
-            begin
-               // node exists in the tree
-               cur_parent_node_id = tree[level][k].node_addr; 
-               break;
-            end
-            if (tree[level][k].node_addr == 0) 
-            begin
-               tree[level][k].parent_node_addr = cur_parent_node_id;
-               tree[level][k].node_addr = dep[i][level].node_addr;
-               break;
+         // check for "unused" indicator
+           if (dep[i][level] == 0)
+             break;
+           for (int k=0; k<user_tree_pkg::MAX_NODES_PER_LEVEL; k++) begin //loop through child nodes
+            //if the field_id matches this this child nodes node_id
+              if (SLICE_NODE_ID(tree[`SLICE_CHILD_NODE_ADDR(tree[cur_node_addr], k)) == dep[i][level]) begin
+                // node exists in the tree
+                cur_node_addr = `SLICE_CHILD_NODE_ADDR(tree[cur_node_addr], k); 
+                break;
+              end
+              if (SLICE_NODE_ID(tree[`SLICE_CHILD_NODE_ADDR(tree[cur_node_addr], k)) == '0) begin
+                //Node was not found, so make an entry
+                ADD_CHILD_NODE_ADDR(tree[cur_node_addr], k, next_node_addr);
+                tree[next_node_addr] = `FILL_NEW_NODE(dep[i][level], cur_node_addr);
+                //Reset node address to beginning of tree
+                cur_node_addr = 0;
+                break;
+              end
             end;
            end;
         end;
