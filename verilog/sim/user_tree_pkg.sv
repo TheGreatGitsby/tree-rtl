@@ -12,20 +12,6 @@ package user_tree_pkg;
    // receive and uses to map to node_data.
    typedef logic [4:0] identifier;
 
-
-   typedef struct packed
-   {
-      logic [IDENTIFIER_SIZE-1:0] field_id;
-      msg_t   msg_name;
-   } node_data;
-
-   const node_data Person_msg      = {5'h1,
-                                       PERSON};
-
-   const node_data PhoneNumber_msg = {5'h4,
-                                       PHONE_NUMBER};
-
-
    typedef logic [IDENTIFIER_SIZE-1:0] dependency_t [NUM_MSG_HIERARCHY];
 
    const dependency_t person_dependency [NUM_MSG_HIERARCHY] = {5'h1, 5'h0, 5'h0}
@@ -35,16 +21,12 @@ package user_tree_pkg;
    const dependency_arr_t dependencies = {person_dependency,
                                      PhoneNumber_dependency};  
 
-//  Callback function to find a node hit
-//  Returns 1 for hit, 0 for miss
-function logic node_hit(input identifier rcv_id,
-                        input node_data tree_node);
+   //this is what goes in the RAM/ROM lookup
+   //after the node address is found
+   typedef logic node_data; //this would be msg/var_type/etc
+   const node_data Person_msg      = 0;
+   const node_data PhoneNumber_msg = 1;
 
-   if (rcv_id == tree_node.field_id)
-     return 1;
-
-   return 0;
-
-endfunction;
+   const node_data node_ROM [NUM_MSGS-1] = {Person_msg, PhoneNumber_msg};
 
 endpackage
