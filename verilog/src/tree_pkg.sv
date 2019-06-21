@@ -14,26 +14,32 @@ package tree_pkg;
    //  logic [7:0]        parent_node_addr;
    //} tree_node;
 
-   `define SLICE_NODE_ID(tree_node) \
-      ``tree_node``[IDENTIFIER_SIZE-1:0]
+   function logic [user_tree_pkg::IDENTIFIER_SIZE-1:0] SLICE_NODE_ID(tree_node node);
+      return node[user_tree_pkg::IDENTIFIER_SIZE-1:0];
+    endfunction;
 
-   `define SLICE_CHILD_NODE_ADDR(tree_node, idx) \
-     ``tree_node``[(IDENTIFIER_SIZE)+(idx*NODE_ADDR_SIZE)+NODE_ADDR_SIZE-1:(IDENTIFIER_SIZE)+(idx*NODE_ADDR_SIZE)]
+   function logic [NODE_ADDR_SIZE-1:0] SLICE_CHILD_NODE_ADDR(input tree_node node, input integer idx);
+     return node[(user_tree_pkg::IDENTIFIER_SIZE)+(idx*NODE_ADDR_SIZE)+NODE_ADDR_SIZE-1 -: NODE_ADDR_SIZE];
+   endfunction;
 
-   `define ADD_CHILD_NODE_ADDR(tree_node, idx, new_child_node_Addr) \
-      SLICE_CHILD_NODE_ADDR(``tree_node``, ``idx``) = ``new_child_node_addr``
+   function tree_node ADD_CHILD_NODE_ADDR(input tree_node node, input integer idx, input logic [NODE_ADDR_SIZE-1:0] new_child_node_addr);
+     tree_node temp = node;
+     temp[(user_tree_pkg::IDENTIFIER_SIZE)+(idx*NODE_ADDR_SIZE)+NODE_ADDR_SIZE-1 -: NODE_ADDR_SIZE] = new_child_node_addr;
+     return temp;
+   endfunction;
 
-   `define FILL_NEW_NODE(new_node_id, parent_node_addr) \
-     {``new_node_id``, 8'h00, ``parent_node_addr``}
+   function tree_node FILL_NEW_NODE(input user_tree_pkg::identifier new_node_id, input logic [NODE_ADDR_SIZE-1:0] parent_node_addr);
+     return {new_node_id, 8'h00, parent_node_addr};
+   endfunction;
 
    typedef tree_node [user_tree_pkg::NUM_MSGS-1:0] tree_t;
 
-   function logic [7:0] tree_SearchChildNodes(input tree_t tree, input logic [7:0] cur_node_addr, input identifier node_id);
+   function logic [7:0] tree_SearchChildNodes(input tree_t tree, input logic [7:0] cur_node_addr, input user_tree_pkg::identifier node_id);
      for (int k=0; k<user_tree_pkg::MAX_NODES_PER_LEVEL; k++) begin //loop through child nodes
       //if the field_id matches this this child nodes node_id
-        if (SLICE_NODE_ID(tree[`SLICE_CHILD_NODE_ADDR(tree[cur_node_addr], k)]) == node_id) begin
+        if (SLICE_NODE_ID(tree[SLICE_CHILD_NODE_ADDR(tree[cur_node_addr], k)]) == node_id) begin
           // node exists in the tree
-          return `SLICE_CHILD_NODE_ADDR(tree[cur_node_addr], k); 
+          return SLICE_CHILD_NODE_ADDR(tree[cur_node_addr], k); 
           break;
         end;
       end;
@@ -52,17 +58,17 @@ package tree_pkg;
          // check for "unused" indicator
            if (dep[i][level] == 0)
              break;
-           if (tree_SearchChildNodes() != 0)
+           if (tree_SearchChildNodes(tree, cur_node_addr, dep[i][level]) != 0)
              // node was found
-             cur_node_addr = tree_SearchChildNodes();
+             cur_node_addr = tree_SearchChildNodes(tree, cur_node_addr, dep[i][level]);
            else begin
              // node wasnt found so make an entry at first available zeroed
              // child node
              for (int k=0; k<user_tree_pkg::MAX_NODES_PER_LEVEL; k++) begin //loop through child nodes
-               if (SLICE_NODE_ID(tree[`SLICE_CHILD_NODE_ADDR(tree[cur_node_addr], k)]) == '0) begin
+               if (SLICE_NODE_ID(tree[SLICE_CHILD_NODE_ADDR(tree[cur_node_addr], k)]) == '0) begin
                  //make an entry at first available 0 child node
-                 ADD_CHILD_NODE_ADDR(tree[cur_node_addr], k, next_node_addr);
-                 tree[next_node_addr] = `FILL_NEW_NODE(dep[i][level], cur_node_addr);
+                 tree[cur_node_addr] = ADD_CHILD_NODE_ADDR(tree[cur_node_addr], k, cur_node_addr + 1);
+                 tree[cur_node_addr+1] = FILL_NEW_NODE(dep[i][level], cur_node_addr);
                  //Reset node address to beginning of tree
                  cur_node_addr = 0;
                  break;
