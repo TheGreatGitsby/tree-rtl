@@ -34,17 +34,18 @@ package tree_pkg;
 
    typedef tree_node [user_tree_pkg::NUM_MSGS-1:0] tree_t;
 
-   function logic [7:0] tree_SearchChildNodes(input tree_t tree, input logic [7:0] cur_node_addr, input user_tree_pkg::identifier node_id);
+   function logic tree_SearchChildNodes(input tree_t tree, inout logic [7:0] node_addr, input user_tree_pkg::identifier node_id);
      for (int k=0; k<user_tree_pkg::MAX_NODES_PER_LEVEL; k++) begin //loop through child nodes
       //if the field_id matches this this child nodes node_id
-        if (SLICE_NODE_ID(tree[SLICE_CHILD_NODE_ADDR(tree[cur_node_addr], k)]) == node_id) begin
+        if (SLICE_NODE_ID(tree[SLICE_CHILD_NODE_ADDR(tree[node_addr], k)]) == node_id) begin
           // node exists in the tree
-          return SLICE_CHILD_NODE_ADDR(tree[cur_node_addr], k); 
+          node_addr = SLICE_CHILD_NODE_ADDR(tree[node_addr], k); 
+          return 1; 
           break;
         end;
       end;
       //node was not found
-      return '0;
+      return 0;
     endfunction;
 
    
@@ -58,10 +59,7 @@ package tree_pkg;
          // check for "unused" indicator
            if (dep[i][level] == 0)
              break;
-           if (tree_SearchChildNodes(tree, cur_node_addr, dep[i][level]) != 0)
-             // node was found
-             cur_node_addr = tree_SearchChildNodes(tree, cur_node_addr, dep[i][level]);
-           else begin
+           if (!tree_SearchChildNodes(tree, cur_node_addr, dep[i][level])) begin
              // node wasnt found so make an entry at first available zeroed
              // child node
              for (int k=0; k<user_tree_pkg::MAX_NODES_PER_LEVEL; k++) begin //loop through child nodes
