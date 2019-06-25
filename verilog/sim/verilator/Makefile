@@ -66,20 +66,21 @@ run:
 	@echo
 	@echo "-- COMPILE -----------------"
 # To compile, we can either just do what Verilator asks,
-	$(MAKE) -j 4 -C obj_dir Vtop.mk Vtop
+	$(MAKE) -j 4 -C obj_dir -f Vtop.mk Vtop
 
 #	@echo
-#	@echo "-- RUN ---------------------"
+	@echo "-- RUN ---------------------"
 #	@mkdir -p logs
 #	obj_dir/Vtop +trace
+	obj_dir/Vtop +trace
 #
 #	@echo
 #	@echo "-- COVERAGE ----------------"
 #	$(VERILATOR_COVERAGE) --annotate logs/annotated logs/coverage.dat
 #
 #	@echo
-#	@echo "-- DONE --------------------"
-#	@echo "To see waveforms, open vlt_dump.vcd in a waveform viewer"
+	@echo "-- DONE --------------------"
+	@echo "To see waveforms, open sim.vcd in a waveform viewer"
 #	@echo
 
 
