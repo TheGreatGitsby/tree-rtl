@@ -7,12 +7,12 @@ package tree_pkg;
    parameter NODE_SIZE = user_tree_pkg::IDENTIFIER_SIZE+NODE_ADDR_SIZE+(NODE_ADDR_SIZE*user_tree_pkg::MAX_NODES_PER_LEVEL);
    typedef logic [NODE_SIZE-1:0] tree_node;
 
-   //typedef struct packed  
-   //{
-   //  logic [IDENTIFIER_SIZE-1] node_id;
-   //  logic [7:0]  child_node_addr_list [user_tree_pkg::MAX_NODES_PER_LEVEL];
-   //  logic [7:0]        parent_node_addr;
-   //} tree_node;
+ //typedef struct packed  
+ //{
+ //LSB - logic [IDENTIFIER_SIZE-1] node_id;
+ //      logic [7:0]  child_node_addr_list [user_tree_pkg::MAX_NODES_PER_LEVEL];
+ //MSB - logic [7:0]        parent_node_addr;
+ //} tree_node;
 
    function logic [user_tree_pkg::IDENTIFIER_SIZE-1:0] SLICE_NODE_ID(tree_node node);
       return node[user_tree_pkg::IDENTIFIER_SIZE-1:0];
@@ -29,7 +29,7 @@ package tree_pkg;
    endfunction;
 
    function tree_node FILL_NEW_NODE(input user_tree_pkg::identifier new_node_id, input logic [NODE_ADDR_SIZE-1:0] parent_node_addr);
-     return {new_node_id, 8'h00, parent_node_addr};
+     return {parent_node_addr, 8'h00, new_node_id};
    endfunction;
 
    typedef tree_node [user_tree_pkg::NUM_MSGS-1:0] tree_t;

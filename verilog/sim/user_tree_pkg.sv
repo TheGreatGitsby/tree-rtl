@@ -11,8 +11,8 @@ package user_tree_pkg;
    typedef identifier [NUM_MSG_HIERARCHY-1:0] dependency;
    typedef dependency [NUM_MSGS-1:0] dependencies_t;
 
-   const dependency person_dependency      = {5'h01, 5'h00};
-   const dependency phonenumber_dependency = {5'h01, 5'h04};
+   const dependency person_dependency      = {5'h00, 5'h01};
+   const dependency phonenumber_dependency = {5'h04, 5'h01};
 
    const dependencies_t dependencies  = {person_dependency, phonenumber_dependency};
 
@@ -22,6 +22,6 @@ package user_tree_pkg;
    const node_data Person_msg      = 0;
    const node_data PhoneNumber_msg = 1;
 
-   const node_data [NUM_MSGS-1:0]  node_ROM = {Person_msg, PhoneNumber_msg};
+   const node_data [NUM_MSGS-1:0]  node_ROM = {PhoneNumber_msg, Person_msg};
 
 endpackage
