@@ -61,7 +61,7 @@ run:
 
 	@echo
 	@echo "-- VERILATE ----------------"
-	$(VERILATOR) $(VERILATOR_FLAGS) ../user_tree_pkg.sv ../../src/tree_pkg.sv ../../src/node_tree.sv --prefix Vtop tb.cpp 
+	$(VERILATOR) $(VERILATOR_FLAGS) ../user_tree_pkg.sv ../../src/tree_pkg.sv ../node_tree.sv --prefix Vtop tb.cpp 
 
 	@echo
 	@echo "-- COMPILE -----------------"

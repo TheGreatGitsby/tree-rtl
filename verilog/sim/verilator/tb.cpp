@@ -29,12 +29,12 @@ int main(int argc, char **argv)
       if (edge_cnt == 5)
       {
          tb->field_id_valid = 1;
-         tb->field_id = 1;
+         tb->field_id = 0xAA;
       }
       if (edge_cnt == 11)
       {
          tb->field_id_valid = 1;
-         tb->field_id = 4;
+         tb->field_id = 0xBB;
       }
       
       tb->eval();

@@ -3,18 +3,18 @@ package user_tree_pkg;
    parameter NUM_MSG_HIERARCHY = 2;
    parameter NUM_MSGS = 2;
    parameter MAX_NODES_PER_LEVEL = 1;
-   parameter IDENTIFIER_SIZE = 5;
+   parameter IDENTIFIER_SIZE = 8;
    
    // This is the address that logic will
    // receive and uses to map to node_data.
-   typedef logic [4:0] identifier;
+   typedef logic [IDENTIFIER_SIZE-1:0] identifier;
    typedef identifier [NUM_MSG_HIERARCHY-1:0] dependency;
    typedef dependency [NUM_MSGS-1:0] dependencies_t;
 
-   const dependency person_dependency      = {5'h00, 5'h01};
-   const dependency phonenumber_dependency = {5'h04, 5'h01};
+   const dependency person_dependency      = {8'h00, 8'hAA};
+   const dependency phonenumber_dependency = {8'hBB, 8'hAA};
 
-   const dependencies_t dependencies  = {person_dependency, phonenumber_dependency};
+   const dependencies_t dependencies  = {phonenumber_dependency, person_dependency};
 
    //this is what goes in the RAM/ROM lookup
    //after the node address is found

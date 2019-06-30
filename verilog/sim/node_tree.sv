@@ -14,17 +14,20 @@ module node_tree
 );
 
    const tree_t tree = tree_generateTree(user_tree_pkg::dependencies);
-   
-   parameter NODE_SEARCH_DELAY = 1;
-   
+   logic [7:0] parent_addr = 8'h00;
+
    always_ff @(posedge clk_i)
    begin
+
+
+     parent_addr = SLICE_PARENT_NODE_ADDR(tree[node_addr]);
+
      node_addr_valid <= 0;
 
      if(field_id_valid) begin
        if(tree_SearchChildNodes(tree, node_addr, field_id))
           node_addr_valid <= 1;
-      end;
+     end;
    end
 
 endmodule

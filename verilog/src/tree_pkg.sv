@@ -32,7 +32,7 @@ package tree_pkg;
      return {parent_node_addr, 8'h00, new_node_id};
    endfunction;
 
-   typedef tree_node [user_tree_pkg::NUM_MSGS-1:0] tree_t;
+   typedef tree_node [user_tree_pkg::NUM_MSGS:0] tree_t;
 
    function logic tree_SearchChildNodes(input tree_t tree, inout logic [7:0] node_addr, input user_tree_pkg::identifier node_id);
      for (int k=0; k<user_tree_pkg::MAX_NODES_PER_LEVEL; k++) begin //loop through child nodes
@@ -40,12 +40,11 @@ package tree_pkg;
         if (SLICE_NODE_ID(tree[SLICE_CHILD_NODE_ADDR(tree[node_addr], k)]) == node_id) begin
           // node exists in the tree
           node_addr = SLICE_CHILD_NODE_ADDR(tree[node_addr], k); 
-          return 1; 
-          break;
+          return 1'b1;
         end;
       end;
       //node was not found
-      return 0;
+      return 1'b0;
     endfunction;
 
    
@@ -55,6 +54,8 @@ package tree_pkg;
      automatic logic[7:0] cur_node_addr = 0;
                             
      for (int i=0; i<user_tree_pkg::NUM_MSGS; i++) begin   // loop all the dependency arrays
+       //Reset node address to beginning of tree
+       cur_node_addr = 0;
        for (int level=0; level<user_tree_pkg::NUM_MSG_HIERARCHY; level++) begin // loop through each dependency array idx
          // check for "unused" indicator
            if (dep[i][level] == 0)
@@ -76,6 +77,10 @@ package tree_pkg;
         end;
      end;
      return tree;
+   endfunction;
+
+   function logic [NODE_ADDR_SIZE-1:0] SLICE_PARENT_NODE_ADDR(input tree_node node);
+     return node[NODE_ADDR_SIZE + (user_tree_pkg::MAX_NODES_PER_LEVEL*NODE_ADDR_SIZE) + (user_tree_pkg::IDENTIFIER_SIZE) - 1 -: NODE_ADDR_SIZE];
    endfunction;
 
 endpackage
